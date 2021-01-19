@@ -16,13 +16,19 @@ BLUE = 0x000088
 YELLOW = 0x884400
 CYAN = 0x0088BB
 MAGENTA = 0x9900BB
-WHITE = 0x888888
+WHITE = 0xFFFFFF
 
 # Set Image Paths
 dishes_image = './bmps/Dishes.bmp'
 dirty_dishes_image = './bmps/DirtyDishes.bmp'
 clean_dishes_image = './bmps/CleanDishes.bmp'
 
+# Screen Variables
+start_screen = 0
+dirty_screen = 1
+settings_screen = 2
+cleaning_screen = 3
+clean_screen = 4
 
 # Add Title
 magtag.graphics.set_background(dishes_image)
@@ -35,7 +41,7 @@ magtag.add_text(
     text_scale=2,
 )
 magtag.set_text("Dish Bish")
-time.sleep(5)
+current_screen = start_screen
 
 # Add Button Labels
 magtag.add_text(
@@ -71,11 +77,12 @@ while True:
         )
         magtag.set_text("               Dirty")
         blink(RED, 2)
+        current_screen = dirty_screen
 
     if magtag.peripherals.button_b_pressed:
         magtag.set_background(WHITE)
         magtag.set_text("")
-        magtag.refresh()
+        current_screen = settings_screen
 
 
     if magtag.peripherals.button_c_pressed:
@@ -94,3 +101,4 @@ while True:
         )
         magtag.set_text("   Cleaning")
         blink(GREEN, 3)
+        current_screen = cleaning_screen
