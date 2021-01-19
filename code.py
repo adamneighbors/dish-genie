@@ -1,4 +1,7 @@
 # TODO: Fill out header
+# TODO: Add option to input time for cleaning process which will then switch to
+# Clean when done.
+# TODO: Update images to be cleaner.
 import time
 import displayio
 import terminalio
@@ -40,11 +43,13 @@ magtag.add_text(
     text_position=(3, 120),
     text_scale=1,
 )
-magtag.set_text(" Dirty                                 Clean", 1)
+magtag.set_text(" Dirty      Settings                  Clean", 1)
 
 
 def blink(color, count):
-    # TODO: make actually blink
+    """
+    Blinks the LEDs for on the Magtag for the given color and number of times
+    """
     for i in range(count):
         magtag.peripherals.neopixel_disable = False
         magtag.peripherals.neopixels.fill(color)
@@ -54,8 +59,6 @@ def blink(color, count):
 
 while True:
     if magtag.peripherals.button_a_pressed:
-        blink(RED, 2)
-        magtag.refresh()
         magtag.graphics.set_background(dirty_dishes_image)
         magtag.add_text(
             text_font=terminalio.FONT,
@@ -67,10 +70,18 @@ while True:
             text_scale=3,
         )
         magtag.set_text("               Dirty")
+        blink(RED, 2)
+
+    if magtag.peripherals.button_b_pressed:
+        magtag.set_background(WHITE)
+        magtag.set_text("")
+        magtag.refresh()
+
+
+    if magtag.peripherals.button_c_pressed:
+        pass
 
     if magtag.peripherals.button_d_pressed:
-        blink(GREEN, 3)
-        magtag.refresh()
         magtag.graphics.set_background(clean_dishes_image)
         magtag.add_text(
             text_font=terminalio.FONT,
@@ -81,4 +92,5 @@ while True:
             # TODO: same here too for text scalling
             text_scale=3,
         )
-        magtag.set_text("   Clean")
+        magtag.set_text("   Cleaning")
+        blink(GREEN, 3)
