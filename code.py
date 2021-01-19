@@ -54,7 +54,12 @@ magtag.set_text(" Dirty      Settings                  Clean", 1)
 
 def blink(color, count):
     """
-    Blinks the LEDs for on the Magtag for the given color and number of times
+    Blinks the LEDs for on the Magtag for the given color and number of times.
+
+    ;param color: Color that the LED will blink.
+    ;type color: str
+    ;param count: Number of times you want the LEDs to blink.
+    ;type count: int
     """
     for i in range(count):
         magtag.peripherals.neopixel_disable = False
