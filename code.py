@@ -74,7 +74,8 @@ def blink(color, count):
 def main():
     global index_count
     # Add Title
-    set_title('Dish Bish', 5, 3)
+    set_title('Dish Genie', 5, 3)
+    magtag.graphics.set_background(dishes_image)
 
     # Add Button Labels
     button_label_a = set_button_label('Dirty', 5)
