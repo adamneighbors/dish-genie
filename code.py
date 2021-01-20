@@ -76,7 +76,7 @@ def main():
     set_title('Dish Genie', 5, 3)
     magtag.graphics.set_background(dishes_image)
 
-    # Add Button Labels
+    # Add Button Labgels
     button_label_a = set_button_label('Dirty', 5)
     button_label_b = set_button_label('Settings', 75)
 
@@ -92,7 +92,7 @@ while True:
         set_title('Dirty', 1, 3)
         blink(RED, 2)
         magtag.refresh()
-
+        
     if magtag.peripherals.button_a_pressed and current_screen == settings_screen:
         main()
 
@@ -105,7 +105,8 @@ while True:
         pass
 
     if magtag.peripherals.button_d_pressed and current_screen != settings_screen:
+        current_screen = cleaning_screen
         magtag.graphics.set_background(clean_dishes_image)
         set_title('Cleaning', 5, 3)
         blink(GREEN, 3)
-        current_screen = cleaning_screen
+        magtag.refresh()
