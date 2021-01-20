@@ -45,7 +45,6 @@ def set_button_label(label, pos):
 
 def set_title(label, pos, scale):
     global index_count
-    magtag.graphics.set_background(dishes_image)
     magtag.add_text(
         text_font = terminalio.FONT,
         text_position = (pos, (magtag.graphics.display.height // 2) - 1),
