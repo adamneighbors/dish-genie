@@ -87,20 +87,11 @@ main()
 
 while True:
     if magtag.peripherals.button_a_pressed and current_screen != settings_screen:
-        magtag.graphics.set_background(dirty_dishes_image)
-        set_title()
-        magtag.add_text(
-            text_font=terminalio.FONT,
-            text_position=(
-                5,
-                (magtag.graphics.display.height // 2) - 1,
-            ),
-            # TODO: Find out why this text scalling isn't working
-            text_scale=3,
-        )
-        magtag.set_text("               Dirty")
-        blink(RED, 2)
         current_screen = dirty_screen
+        magtag.graphics.set_background(dirty_dishes_image)
+        set_title('Dirty', 1, 3)
+        blink(RED, 2)
+        magtag.refresh()
 
     if magtag.peripherals.button_a_pressed and current_screen == settings_screen:
         main()
@@ -115,15 +106,6 @@ while True:
 
     if magtag.peripherals.button_d_pressed and current_screen != settings_screen:
         magtag.graphics.set_background(clean_dishes_image)
-        magtag.add_text(
-            text_font=terminalio.FONT,
-            text_position=(
-                5,
-                (magtag.graphics.display.height // 2) - 1,
-            ),
-            # TODO: same here too for text scalling
-            text_scale=3,
-        )
-        magtag.set_text("   Cleaning")
+        set_title('Cleaning', 5, 3)
         blink(GREEN, 3)
         current_screen = cleaning_screen
