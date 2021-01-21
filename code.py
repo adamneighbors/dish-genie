@@ -24,12 +24,12 @@ dirty_dishes_image = './bmps/DirtyDishes.bmp'
 clean_dishes_image = './bmps/CleanDishes.bmp'
 
 # Screen Variables
-start_screen = 0
+main_screen = 0
 dirty_screen = 1
 settings_screen = 2
 cleaning_screen = 3
 clean_screen = 4
-current_screen = start_screen
+current_screen = main_screen
 
 # Define Functions
 class Button:
@@ -83,6 +83,7 @@ button_c = Button('', 160, 2)
 button_d = Button('', 220, 3)
 
 def main():
+    current_screen = main_screen
     # Add Title
     set_title('Dish Genie', 5, 3)
     magtag.graphics.set_background(dishes_image)
