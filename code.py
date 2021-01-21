@@ -23,14 +23,6 @@ dishes_image = './bmps/Dishes.bmp'
 dirty_dishes_image = './bmps/DirtyDishes.bmp'
 clean_dishes_image = './bmps/CleanDishes.bmp'
 
-# Screen Variables
-main_screen = 0
-dirty_screen = 1
-settings_screen = 2
-cleaning_screen = 3
-clean_screen = 4
-current_screen = main_screen
-
 # Define Functions
 class Button:
     def __init__(self, label, pos, index):
@@ -51,13 +43,34 @@ class Button:
         magtag.set_text(label, self.index, False)
 
 
-def set_title(label, pos, scale):
-    magtag.add_text(
-        text_font = terminalio.FONT,
-        text_position = (pos, (magtag.graphics.display.height // 2) - 1),
-        text_scale = scale,
-    )
-    magtag.set_text(label, 4, False)
+class Screen:
+    current_screen = None
+    def __init__(self, screen_name, index, title_pos, title_scale):
+        self.screen_name = screen_name
+        self.index = index
+        self.title_pos = title_pos
+        self.title_scale = title_scale
+        self.current_screen = current_screen
+
+        self.set_title()
+
+    def transition_screen(self):
+        pass
+
+    def change_buttons(self, button_a_label, button_b_label, button_c_label, button_d_label):
+        button_a.change_label(button_a_label)
+        button_b.change_label(button_b_label)
+        button_c.change_label(button_c_label)
+        button_d.change_label(button_d_label)
+
+
+    def set_title(self):
+        magtag.add_text(
+            text_font = terminalio.FONT,
+            text_position = (self.title_pos, (magtag.graphics.display.height // 2) - 1),
+            text_scale = self.title_scale,
+        )
+        magtag.set_text(self.screen_name, 4, False)
 
 
 def blink(color, count):
@@ -76,6 +89,13 @@ def blink(color, count):
         magtag.peripherals.neopixel_disable = True
         time.sleep(0.5)
 
+# Create screens
+main_screen = Screen('Main', 0)
+dirty_screen = Screen('Dirty', 1)
+settings_screen = Screen('Settings', 2)
+cleaning_screen = Screen('Cleaning', 3)
+clean_screen = Screen('Clean', 4)
+
 # Create buttons
 button_a = Button('', 5, 0)
 button_b = Button('', 75, 1)
@@ -83,7 +103,7 @@ button_c = Button('', 160, 2)
 button_d = Button('', 220, 3)
 
 def main():
-    current_screen = main_screen
+    Screen.current_screen = main_screen.screen_name
     # Add Title
     set_title('Dish Genie', 5, 3)
     magtag.graphics.set_background(dishes_image)
@@ -92,35 +112,33 @@ def main():
     button_c.change_label('')
     button_d.change_label('Cleaning')
     magtag.refresh()
+    print(Screen.current_screen)
 
 
 main()
 
 while True:
-    if magtag.peripherals.button_a_pressed and current_screen != settings_screen:
-        current_screen = dirty_screen
+    if magtag.peripherals.button_a_pressed and Screen.current_screen != settings_screen.screen_name:
+        Screen.current_screen = dirty_screen.screen_name
         magtag.graphics.set_background(dirty_dishes_image)
         set_title('Dirty', 1, 3)
         blink(RED, 2)
         magtag.refresh()
 
-    if magtag.peripherals.button_a_pressed and current_screen == settings_screen:
+    if magtag.peripherals.button_a_pressed and Screen.current_screen == settings_screen.screen_name:
         main()
 
-    if magtag.peripherals.button_b_pressed and current_screen != settings_screen:
-        current_screen = settings_screen
-        button_a.change_label('Back')
-        button_b.change_label('')
-        button_c.change_label('')
-        button_d.change_label('')
+    if magtag.peripherals.button_b_pressed and Screen.current_screen != settings_screen.screen_name:
+        Screen.current_screen = settings_screen.screen_name
+        settings_screen.change_buttons('Home', '', '', '')
         magtag.set_background(WHITE)
         magtag.refresh()
 
-    if magtag.peripherals.button_c_pressed and current_screen != settings_screen:
+    if magtag.peripherals.button_c_pressed and Screen.current_screen != settings_screen.screen_name:
         pass
 
-    if magtag.peripherals.button_d_pressed and current_screen != settings_screen:
-        current_screen = cleaning_screen
+    if magtag.peripherals.button_d_pressed and Screen.current_screen != settings_screen.screen_name:
+        Screen.current_screen = cleaning_screen.screen_name
         magtag.graphics.set_background(clean_dishes_image)
         set_title('Cleaning', 5, 3)
         blink(GREEN, 3)
