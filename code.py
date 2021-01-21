@@ -29,29 +29,35 @@ dirty_screen = 1
 settings_screen = 2
 cleaning_screen = 3
 clean_screen = 4
-index_count = 0
 current_screen = start_screen
 
 # Define Functions
-def set_button_label(label, pos):
-    global index_count
-    magtag.add_text(
-        text_font = terminalio.FONT,
-        text_position = (pos, 120),
-        text_scale = 1,
-        )
-    magtag.set_text(label, index_count, False)
-    index_count += 1
+class Button:
+    def __init__(self, label, pos, index):
+        self.label = label
+        self.pos = pos
+        self.index = index
+        self.set_label()
+
+    def set_label(self):
+        magtag.add_text(
+            text_font = terminalio.FONT,
+            text_position = (self.pos, 120),
+            text_scale = 1,
+            )
+        magtag.set_text(self.label, self.index, False)
+
+    def change_label(self, label):
+        magtag.set_text(label, self.index, False)
+
 
 def set_title(label, pos, scale):
-    global index_count
     magtag.add_text(
         text_font = terminalio.FONT,
         text_position = (pos, (magtag.graphics.display.height // 2) - 1),
         text_scale = scale,
     )
-    magtag.set_text(label, index_count, False)
-    index_count += 1
+    magtag.set_text(label, 4, False)
 
 
 def blink(color, count):
@@ -70,16 +76,20 @@ def blink(color, count):
         magtag.peripherals.neopixel_disable = True
         time.sleep(0.5)
 
+# Add Button Labgels
+button_a = Button('', 5, 0)
+button_b = Button('', 75, 1)
+button_c = Button('', 160, 2)
+button_d = Button('', 220, 3)
+
 def main():
-    global index_count
     # Add Title
     set_title('Dish Genie', 5, 3)
     magtag.graphics.set_background(dishes_image)
-
-    # Add Button Labgels
-    button_label_a = set_button_label('Dirty', 5)
-    button_label_b = set_button_label('Settings', 75)
-
+    button_a.change_label('Dirty')
+    button_b.change_label('Settings')
+    button_c.change_label('')
+    button_d.change_label('Cleaning')
     magtag.refresh()
 
 
