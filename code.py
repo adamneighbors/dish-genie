@@ -103,14 +103,18 @@ while True:
         set_title('Dirty', 1, 3)
         blink(RED, 2)
         magtag.refresh()
-        
+
     if magtag.peripherals.button_a_pressed and current_screen == settings_screen:
         main()
 
     if magtag.peripherals.button_b_pressed and current_screen != settings_screen:
         current_screen = settings_screen
+        button_a.change_label('Back')
+        button_b.change_label('')
+        button_c.change_label('')
+        button_d.change_label('')
         magtag.set_background(WHITE)
-        magtag.set_text("")
+        magtag.refresh()
 
     if magtag.peripherals.button_c_pressed and current_screen != settings_screen:
         pass
