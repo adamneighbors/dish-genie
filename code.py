@@ -76,7 +76,7 @@ def blink(color, count):
         magtag.peripherals.neopixel_disable = True
         time.sleep(0.5)
 
-# Add Button Labgels
+# Create buttons
 button_a = Button('', 5, 0)
 button_b = Button('', 75, 1)
 button_c = Button('', 160, 2)
