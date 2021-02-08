@@ -52,23 +52,36 @@ class Screen:
         self.title_scale = title_scale
         self.image = image
         current_screen = index
+        self.button_a_label = ''
+        self.button_b_label = ''
+        self.button_c_label = ''
+        self.button_d_label = ''
 
         self.set_title()
+
+    def set_buttons(self, button_a_label, button_b_label, button_c_label,
+    button_d_label):
+        self.button_a_label = button_a_label
+        self.button_b_label = button_b_label
+        self.button_c_label = button_c_label
+        self.button_d_label = button_d_label
 
     def change_screen(self):
         self.current_screen = self.index
         self.change_image()
         self.set_title()
+        self.change_buttons()
+        magtag.refresh()
 
     def change_image(self):
         magtag.graphics.set_background(self.image)
 
 
-    def change_buttons(self, button_a_label, button_b_label, button_c_label, button_d_label):
-        button_a.change_label(button_a_label)
-        button_b.change_label(button_b_label)
-        button_c.change_label(button_c_label)
-        button_d.change_label(button_d_label)
+    def change_buttons(self):
+        button_a.change_label(self.button_a_label)
+        button_b.change_label(self.button_b_label)
+        button_c.change_label(self.button_c_label)
+        button_d.change_label(self.button_d_label)
 
 
     def set_title(self):
