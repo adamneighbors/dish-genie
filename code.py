@@ -131,7 +131,7 @@ def main():
 
     clean_screen = Screen('Clean', clean_dishes_image, 4, 5, 5)
     clean_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
-    
+
     main_screen.change_screen()
 
 main()
@@ -143,7 +143,7 @@ while True:
         magtag.refresh()
 
     if magtag.peripherals.button_a_pressed and Screen.current_screen == settings_screen.index:
-        main()
+        main_screen.change_screen()
 
     if magtag.peripherals.button_b_pressed and Screen.current_screen != settings_screen.index:
         Screen.current_screen = settings_screen.index
