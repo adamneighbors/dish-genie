@@ -115,32 +115,35 @@ def blink(color, count):
         magtag.peripherals.neopixel_disable = True
         time.sleep(0.5)
 
-def main():
-    # Create buttons
-    button_a = Button('', 5, 0)
-    button_b = Button('', 75, 1)
-    button_c = Button('', 160, 2)
-    button_d = Button('', 220, 3)
+# Main Initialization
+# Create buttons
+button_a = Button('', 5, 0)
+button_b = Button('', 75, 1)
+button_c = Button('', 160, 2)
+button_d = Button('', 220, 3)
 
-    # Create screens
-    main_screen = Screen('Dish Genie', Genie_image, 0, 5, 3)
-    main_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+# Create screens
+main_screen = Screen('Dish Genie', Genie_image, 0, 5, 3)
+main_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+main_screen.set_blink(BLUE, 1)
 
-    dirty_screen = Screen('Dirty', dirty_dishes_image, 1, 500, 5)
-    dirty_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+dirty_screen = Screen('Dirty', dirty_dishes_image, 1, 500, 5)
+dirty_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+dirty_screen.set_blink(RED, 2)
 
-    settings_screen = Screen('Settings', None, 2, 5, 5)
-    settings_screen.set_buttons('Home', '', '', '')
+settings_screen = Screen('Settings', WHITE, 2, 5, 5)
+settings_screen.set_buttons('Home', '', '', '')
+settings_screen.set_blink(MAGENTA, 1)
 
-    cleaning_screen = Screen('Cleaning', clean_dishes_image, 3, 5, 5)
-    cleaning_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+cleaning_screen = Screen('Cleaning', clean_dishes_image, 3, 5, 5)
+cleaning_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+cleaning_screen.set_blink(YELLOW, 3)
 
-    clean_screen = Screen('Clean', clean_dishes_image, 4, 5, 5)
-    clean_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+clean_screen = Screen('Clean', clean_dishes_image, 4, 5, 5)
+clean_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+clean_screen.set_blink(GREEN, 5)
 
-    main_screen.change_screen()
-
-main()
+main_screen.change_screen()
 
 while True:
     if magtag.peripherals.button_a_pressed and Screen.current_screen != settings_screen.index:
