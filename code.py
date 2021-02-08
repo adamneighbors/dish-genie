@@ -73,6 +73,7 @@ class Screen:
         self.set_title()
         self.change_buttons()
         magtag.refresh()
+        blink(self.blink_color, self.blink_count)
 
     def change_image(self):
         magtag.graphics.set_background(self.image)
@@ -92,6 +93,10 @@ class Screen:
             text_scale = self.title_scale,
         )
         magtag.set_text(self.title, 4, False)
+
+    def set_blink(self, color, count):
+        self.blink_color = color
+        self.blink_count = count
 
 
 def blink(color, count):
