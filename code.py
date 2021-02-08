@@ -8,23 +8,7 @@ import displayio
 import terminalio
 from adafruit_magtag.magtag import MagTag
 
-magtag = MagTag()
-
-# Color Codes
-RED = 0x880000
-GREEN = 0x00FF00
-BLUE = 0x000088
-YELLOW = 0x884400
-CYAN = 0x0088BB
-MAGENTA = 0x9900BB
-WHITE = 0xFFFFFF
-
-# Set Image Paths
-Genie_image = './bmps/Dish_Genie.bmp'
-dirty_dishes_image = './bmps/DirtyDishes.bmp'
-clean_dishes_image = './bmps/CleanDishes.bmp'
-
-# Define Functions
+# Define classes
 class Button:
     def __init__(self, label, pos, index):
         self.label = label
@@ -99,6 +83,7 @@ class Screen:
         self.blink_count = count
 
 
+# Define functions
 def blink(color, count):
     """
     Blinks the LEDs for on the Magtag for the given color and number of times.
@@ -115,7 +100,23 @@ def blink(color, count):
         magtag.peripherals.neopixel_disable = True
         time.sleep(0.5)
 
-# Main Initialization
+# Main initialization
+magtag = MagTag()
+
+# Color codes
+RED = 0x880000
+GREEN = 0x00FF00
+BLUE = 0x000088
+YELLOW = 0x884400
+CYAN = 0x0088BB
+MAGENTA = 0x9900BB
+WHITE = 0xFFFFFF
+
+# Set image paths
+Genie_image = './bmps/Dish_Genie.bmp'
+dirty_dishes_image = './bmps/DirtyDishes.bmp'
+clean_dishes_image = './bmps/CleanDishes.bmp'
+
 # Create buttons
 button_a = Button('', 5, 0)
 button_b = Button('', 75, 1)
@@ -123,28 +124,29 @@ button_c = Button('', 160, 2)
 button_d = Button('', 220, 3)
 
 # Create screens
-main_screen = Screen('Dish Genie', Genie_image, 0, 5, 3)
+main_screen = Screen('Dish Genie', Genie_image, 4, 100, 3)
 main_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 main_screen.set_blink(BLUE, 1)
 
-dirty_screen = Screen('Dirty', dirty_dishes_image, 1, 500, 5)
+dirty_screen = Screen('Dirty', dirty_dishes_image, 5, 100, 5)
 dirty_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 dirty_screen.set_blink(RED, 2)
 
-settings_screen = Screen('Settings', WHITE, 2, 5, 5)
+settings_screen = Screen('Settings', WHITE, 6, 5, 5)
 settings_screen.set_buttons('Home', '', '', '')
 settings_screen.set_blink(MAGENTA, 1)
 
-cleaning_screen = Screen('Cleaning', clean_dishes_image, 3, 5, 5)
+cleaning_screen = Screen('Cleaning', clean_dishes_image, 7, 5, 5)
 cleaning_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 cleaning_screen.set_blink(YELLOW, 3)
 
-clean_screen = Screen('Clean', clean_dishes_image, 4, 5, 5)
+clean_screen = Screen('Clean', clean_dishes_image, 8, 5, 5)
 clean_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 clean_screen.set_blink(GREEN, 5)
 
 main_screen.change_screen()
 
+# Main loop
 while True:
     if magtag.peripherals.button_a_pressed and Screen.current_screen != settings_screen.index:
         dirty_screen.change_screen()
