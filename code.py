@@ -2,6 +2,7 @@
 # TODO: Add option to input time for cleaning process which will then switch to
 # Clean when done.
 # TODO: Update images to be cleaner.
+# TODO: figure out issue with text text_position
 import time
 import displayio
 import terminalio
