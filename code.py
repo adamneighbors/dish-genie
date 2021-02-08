@@ -19,7 +19,7 @@ MAGENTA = 0x9900BB
 WHITE = 0xFFFFFF
 
 # Set Image Paths
-dishes_image = './bmps/Dishes.bmp'
+Genie_image = './bmps/Dish_Genie.bmp'
 dirty_dishes_image = './bmps/DirtyDishes.bmp'
 clean_dishes_image = './bmps/CleanDishes.bmp'
 
@@ -104,7 +104,7 @@ button_c = Button('', 160, 2)
 button_d = Button('', 220, 3)
 
 # Create screens
-main_screen = Screen('Dish Genie', dishes_image, 0, 5, 3)
+main_screen = Screen('Dish Genie', Genie_image, 0, 5, 3)
 dirty_screen = Screen('Dirty', dirty_dishes_image, 1, 500, 5)
 settings_screen = Screen('Settings', None, 2, 5, 5)
 cleaning_screen = Screen('Cleaning', clean_dishes_image, 3, 5, 5)
