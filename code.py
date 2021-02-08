@@ -145,21 +145,16 @@ main()
 while True:
     if magtag.peripherals.button_a_pressed and Screen.current_screen != settings_screen.index:
         dirty_screen.change_screen()
-        blink(RED, 2)
-        magtag.refresh()
 
     if magtag.peripherals.button_a_pressed and Screen.current_screen == settings_screen.index:
         main_screen.change_screen()
 
     if magtag.peripherals.button_b_pressed and Screen.current_screen != settings_screen.index:
-        Screen.current_screen = settings_screen.index
-        magtag.set_background(WHITE)
+        settings_screen.change_screen()
 
     if magtag.peripherals.button_c_pressed and Screen.current_screen != settings_screen.index:
         pass
 
     if magtag.peripherals.button_d_pressed and Screen.current_screen != settings_screen.index:
         Screen.current_screen = cleaning_screen.index
-        magtag.graphics.set_background(clean_dishes_image)
-        set_title('Cleaning', 5, 3)
-        blink(GREEN, 3)
+        cleaning_screen.change_screen()
