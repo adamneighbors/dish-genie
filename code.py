@@ -68,7 +68,7 @@ class Screen:
         self.button_d_label = button_d_label
 
     def change_screen(self):
-        self.current_screen = self.index
+        Screen.current_screen = self.index
         self.change_image()
         self.set_title()
         self.change_buttons()
