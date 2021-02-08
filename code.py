@@ -147,9 +147,7 @@ while True:
 
     if magtag.peripherals.button_b_pressed and Screen.current_screen != settings_screen.index:
         Screen.current_screen = settings_screen.index
-        settings_screen.change_buttons('Home', '', '', '')
         magtag.set_background(WHITE)
-        magtag.refresh()
 
     if magtag.peripherals.button_c_pressed and Screen.current_screen != settings_screen.index:
         pass
@@ -159,4 +157,3 @@ while True:
         magtag.graphics.set_background(clean_dishes_image)
         set_title('Cleaning', 5, 3)
         blink(GREEN, 3)
-        magtag.refresh()
