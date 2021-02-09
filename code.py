@@ -3,9 +3,11 @@
 # Clean when done.
 # TODO: Update images to be cleaner.
 # TODO: Add documentation
+# TODO: Add sound when cleaning is done
 import time
 import displayio
 import terminalio
+import os
 from adafruit_magtag.magtag import MagTag
 
 # Define classes
@@ -108,8 +110,23 @@ def blink(color, count):
         magtag.peripherals.neopixel_disable = True
         time.sleep(0.5)
 
+def timer_read():
+    try:
+        with open('timer.txt', 'r') as timer_file:
+            timer_amount = timer_file.read()
+    except:
+        timer_amount = default_timer
+
+    return timer_amount
+
+def timer_write():
+    with open('timer.txt', 'x') as timer_file:
+            timer_file.write(timer_amount)
+
 # Main initialization
 magtag = MagTag()
+default_timer = 3600
+timer_amount = timer_read()
 
 # Color codes
 RED = 0x880000
@@ -140,8 +157,8 @@ dirty_screen = Screen('Dirty', dirty_dishes_image, 5, 125, 5)
 dirty_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
 dirty_screen.set_blink(RED, 2)
 
-settings_screen = Screen('Settings', WHITE, 6, 5, 5)
-settings_screen.set_buttons('Home', '', '', '')
+settings_screen = Screen('Timer:', WHITE, 6, 10, 3)
+settings_screen.set_buttons('Home', '+1 hr', '+30 Min', 'Reset')
 settings_screen.set_blink(MAGENTA, 1)
 
 cleaning_screen = Screen('Cleaning', clean_dishes_image, 7, 5, 4)
