@@ -145,8 +145,8 @@ clean_dishes_image = './bmps/CleanDishes.bmp'
 # Create buttons
 button_a = Button('', 5, 0)
 button_b = Button('', 75, 1)
-button_c = Button('', 160, 2)
-button_d = Button('', 220, 3)
+button_c = Button('', 155, 2)
+button_d = Button('', 225, 3)
 
 # Create screens
 main_screen = Screen('Dish Genie', Genie_image, 4, 100, 3)
