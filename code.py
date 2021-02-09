@@ -2,7 +2,7 @@
 # TODO: Add option to input time for cleaning process which will then switch to
 # Clean when done.
 # TODO: Update images to be cleaner.
-# TODO: figure out issue with text text_position
+# TODO: Add documentation
 import time
 import displayio
 import terminalio
@@ -76,7 +76,15 @@ class Screen:
             text_position = (self.title_pos, (magtag.graphics.display.height // 2) - 1),
             text_scale = self.title_scale,
         )
-        magtag.set_text(self.title, 4, False)
+        magtag.set_text(self.title, self.index, False)
+
+        # Clears all other titles except for the one for the current screen.
+        try:
+            for i in range(50):
+                if i != self.index:
+                    magtag.set_text('', i, False)
+        except:
+            pass
 
     def set_blink(self, color, count):
         self.blink_color = color
@@ -128,7 +136,7 @@ main_screen = Screen('Dish Genie', Genie_image, 4, 100, 3)
 main_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 main_screen.set_blink(BLUE, 1)
 
-dirty_screen = Screen('Dirty', dirty_dishes_image, 5, 100, 5)
+dirty_screen = Screen('Dirty', dirty_dishes_image, 5, 125, 5)
 dirty_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 dirty_screen.set_blink(RED, 2)
 
@@ -136,7 +144,7 @@ settings_screen = Screen('Settings', WHITE, 6, 5, 5)
 settings_screen.set_buttons('Home', '', '', '')
 settings_screen.set_blink(MAGENTA, 1)
 
-cleaning_screen = Screen('Cleaning', clean_dishes_image, 7, 5, 5)
+cleaning_screen = Screen('Cleaning', clean_dishes_image, 7, 5, 4)
 cleaning_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 cleaning_screen.set_blink(YELLOW, 3)
 
