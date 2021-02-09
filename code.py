@@ -133,11 +133,11 @@ button_d = Button('', 220, 3)
 
 # Create screens
 main_screen = Screen('Dish Genie', Genie_image, 4, 100, 3)
-main_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+main_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
 main_screen.set_blink(BLUE, 1)
 
 dirty_screen = Screen('Dirty', dirty_dishes_image, 5, 125, 5)
-dirty_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+dirty_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
 dirty_screen.set_blink(RED, 2)
 
 settings_screen = Screen('Settings', WHITE, 6, 5, 5)
@@ -145,11 +145,11 @@ settings_screen.set_buttons('Home', '', '', '')
 settings_screen.set_blink(MAGENTA, 1)
 
 cleaning_screen = Screen('Cleaning', clean_dishes_image, 7, 5, 4)
-cleaning_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+cleaning_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
 cleaning_screen.set_blink(YELLOW, 3)
 
 clean_screen = Screen('Clean', clean_dishes_image, 8, 5, 5)
-clean_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
+clean_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
 clean_screen.set_blink(GREEN, 5)
 
 main_screen.change_screen()
@@ -166,7 +166,7 @@ while True:
         settings_screen.change_screen()
 
     if magtag.peripherals.button_c_pressed and Screen.current_screen != settings_screen.index:
-        pass
+        clean_screen.change_screen()
 
     if magtag.peripherals.button_d_pressed and Screen.current_screen != settings_screen.index:
         Screen.current_screen = cleaning_screen.index
