@@ -214,18 +214,31 @@ main_screen.change_screen()
 
 # Main loop
 while True:
-    if magtag.peripherals.button_a_pressed and Screen.current_screen != settings_screen.index:
-        dirty_screen.change_screen()
+    # Button A
+    if magtag.peripherals.button_a_pressed:
+        if Screen.current_screen == settings_screen.index:
+            cleaning_timer.write()
+            main_screen.change_screen()
+        else:
+            dirty_screen.change_screen()
 
-    if magtag.peripherals.button_a_pressed and Screen.current_screen == settings_screen.index:
-        main_screen.change_screen()
+    # Button B
+    if magtag.peripherals.button_b_pressed:
+        if Screen.current_screen == settings_screen.index:
+            cleaning_timer.update(3600)
+        else:
+            settings_screen.change_screen()
 
-    if magtag.peripherals.button_b_pressed and Screen.current_screen != settings_screen.index:
-        settings_screen.change_screen()
+    # Button C
+    if magtag.peripherals.button_c_pressed:
+        if Screen.current_screen == settings_screen.index:
+            cleaning_timer.update(1800)
+        else:
+            cleaning_screen.change_screen()
 
-    if magtag.peripherals.button_c_pressed and Screen.current_screen != settings_screen.index:
-        clean_screen.change_screen()
-
-    if magtag.peripherals.button_d_pressed and Screen.current_screen != settings_screen.index:
-        Screen.current_screen = cleaning_screen.index
-        cleaning_screen.change_screen()
+    # Button D
+    if magtag.peripherals.button_d_pressed:
+        if Screen.current_screen == settings_screen.index:
+            cleaning_timer.amount = 0
+        else:
+            clean_screen.change_screen()
