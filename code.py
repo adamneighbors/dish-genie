@@ -102,6 +102,35 @@ class Screen:
         self.blink_count = count
 
 
+class Timer():
+    def __init__(self):
+        self.default_timer = 3600
+        self.amount = self.read()
+
+    def read(self):
+        try:
+            with open('timer.txt', 'r') as timer_file:
+                file_time = timer_file.read()
+                self.default_timer = file_time
+                return file_time
+                timer_file.close()
+        except:
+            return self.default_timer
+
+    def write(self):
+        try:
+            with open('timer.txt', 'w') as timer_file:
+                timer_file.write(self.amount)
+                timer_file.close()
+        except:
+            pass
+
+    def update(self, time):
+        self.amount += time
+        settings_screen.title = f'Timer: {display_time(cleaning_timer.amount)}'
+        settings_screen.change_screen()
+
+
 # Define functions
 def blink(color, count):
     """
@@ -119,23 +148,26 @@ def blink(color, count):
         magtag.peripherals.neopixel_disable = True
         time.sleep(0.5)
 
-def timer_read():
-    try:
-        with open('timer.txt', 'r') as timer_file:
-            timer_amount = timer_file.read()
-    except:
-        timer_amount = default_timer
+intervals = (
+    ('weeks', 604800),  # 60 * 60 * 24 * 7
+    ('days', 86400),    # 60 * 60 * 24
+    ('hours', 3600),    # 60 * 60
+    ('minutes', 60),
+    ('seconds', 1),
+    )
 
-    return timer_amount
+def display_time(seconds):
+    seconds = seconds % (24 * 3600)
+    hour = seconds // 3600
+    seconds %= 3600
+    minutes = seconds // 60
+    seconds %= 60
 
-def timer_write():
-    with open('timer.txt', 'x') as timer_file:
-            timer_file.write(timer_amount)
+    return "%d:%02d" % (hour, minutes)
 
 # Main initialization
 magtag = MagTag()
-default_timer = 3600
-timer_amount = timer_read()
+cleaning_timer = Timer()
 
 # Color codes
 RED = 0x880000
@@ -166,7 +198,7 @@ dirty_screen = Screen('Dirty', dirty_dishes_image, 5, 125, 5)
 dirty_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
 dirty_screen.set_blink(RED, 2)
 
-settings_screen = Screen('Timer:', WHITE, 6, 10, 3)
+settings_screen = Screen(f'Timer: {display_time(cleaning_timer.amount)}', WHITE, 6, 10, 3)
 settings_screen.set_buttons('Home', '+1 hr', '+30 Min', 'Reset')
 settings_screen.set_blink(MAGENTA, 1)
 
