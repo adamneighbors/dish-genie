@@ -10,6 +10,15 @@ import time
 import displayio
 import terminalio
 from adafruit_magtag.magtag import MagTag
+import storage
+from supervisor import runtime
+
+# Try to mount root if USB is not connected.
+try:
+    storage.remount('/', False)
+except:
+    pass
+
 
 # Define classes
 class Button:
