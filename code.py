@@ -9,7 +9,6 @@
 import time
 import displayio
 import terminalio
-import os
 from adafruit_magtag.magtag import MagTag
 
 # Define classes
