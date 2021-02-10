@@ -81,7 +81,6 @@ class Screen:
         button_c.change_label(self.button_c_label)
         button_d.change_label(self.button_d_label)
 
-
     def set_title(self):
         magtag.add_text(
             text_font = terminalio.FONT,
