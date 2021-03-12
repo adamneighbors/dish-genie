@@ -11,6 +11,8 @@ import displayio
 import terminalio
 from adafruit_magtag.magtag import MagTag
 import storage
+import board
+import alarm
 from supervisor import runtime
 
 # Try to mount root if USB is not connected.
@@ -19,6 +21,12 @@ try:
 except:
     pass
 
+# set up pin alarms
+buttons = (board.BUTTON_A, board.BUTTON_B)
+pin_alarms = [alarm.pin.PinAlarm(pin=pin, value=False, pull=True) for pin in buttons]
+
+# toggle saved state
+alarm.sleep_memory[0] = not alarm.sleep_memory[0]
 
 # Define classes
 class Button:
@@ -169,6 +177,9 @@ def display_time(seconds):
 magtag = MagTag()
 cleaning_timer = Timer()
 
+# toggle saved state
+alarm.sleep_memory[0] = not alarm.sleep_memory[0]
+
 # Color codes
 RED = 0x880000
 GREEN = 0x00FF00
@@ -235,6 +246,9 @@ while True:
             cleaning_timer.update(1800)
         else:
             cleaning_screen.change_screen()
+
+            # go to sleep
+            alarm.exit_and_deep_sleep_until_alarms(*pin_alarms)
 
     # Button D
     if magtag.peripherals.button_d_pressed:
