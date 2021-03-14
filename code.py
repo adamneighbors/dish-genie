@@ -1,7 +1,6 @@
 # TODO: Fill out header
 # TODO: Update images to be cleaner.
 # TODO: Add documentation
-# TODO: Add sound when cleaning is done
 # TODO: Possibly change font
 # TODO: Display time left on cleaning page
 import time
@@ -145,6 +144,7 @@ class Timer():
         # Sleep for time set in settings
         alarm.light_sleep_until_alarms(time_alarm)
         clean_screen.change_screen()
+        magtag.peripherals.play_tone(880, 0.15)
 
         # go to sleep until awaken by button
         alarm.exit_and_deep_sleep_until_alarms(*pin_alarms)
