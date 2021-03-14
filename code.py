@@ -1,6 +1,4 @@
 # TODO: Fill out header
-# TODO: Add option to input time for cleaning process which will then switch to
-# Clean when done.
 # TODO: Update images to be cleaner.
 # TODO: Add documentation
 # TODO: Add sound when cleaning is done
@@ -140,6 +138,17 @@ class Timer():
         settings_screen.title = f'Timer: {display_time(self.amount)}'
         settings_screen.change_screen()
 
+    def begin(self):
+        time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() +
+        self.amount)
+
+        # Sleep for time set in settings
+        alarm.light_sleep_until_alarms(time_alarm)
+        clean_screen.change_screen()
+
+        # go to sleep until awaken by button
+        alarm.exit_and_deep_sleep_until_alarms(*pin_alarms)
+
 # Define functions
 def blink(color, count):
     """
@@ -177,9 +186,6 @@ def display_time(seconds):
 # Main initialization
 magtag = MagTag()
 cleaning_timer = Timer()
-
-# toggle saved state
-alarm.sleep_memory[0] = not alarm.sleep_memory[0]
 
 # Color codes
 RED = 0x880000
@@ -248,7 +254,7 @@ while True:
         else:
             clean_screen.change_screen()
 
-            # go to sleep
+            # go to sleep until awaken by button
             alarm.exit_and_deep_sleep_until_alarms(*pin_alarms)
 
     # Button D
@@ -257,3 +263,4 @@ while True:
             cleaning_timer.set(3600)
         else:
             cleaning_screen.change_screen()
+            cleaning_timer.begin()
