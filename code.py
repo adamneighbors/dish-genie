@@ -121,15 +121,14 @@ class Timer():
                 file_time = timer_file.read()
                 self.default_timer = file_time
                 return file_time
-                timer_file.close()
         except:
             return self.default_timer
 
     def write(self):
+        print(self.amount)
         try:
             with open('timer.txt', 'w') as timer_file:
-                timer_file.write(self.amount)
-                timer_file.close()
+                timer_file.write(str(self.amount))
         except:
             pass
 
@@ -165,7 +164,7 @@ intervals = (
     )
 
 def display_time(seconds):
-    seconds = seconds % (24 * 3600)
+    seconds = float(seconds) % (24 * 3600)
     hour = seconds // 3600
     seconds %= 3600
     minutes = seconds // 60
