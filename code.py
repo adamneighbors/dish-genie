@@ -119,12 +119,11 @@ class Timer():
             with open('timer.txt', 'r') as timer_file:
                 file_time = timer_file.read()
                 self.default_timer = file_time
-                return file_time
+                return float(file_time)
         except:
             return self.default_timer
 
     def write(self):
-        print(self.amount)
         try:
             with open('timer.txt', 'w') as timer_file:
                 timer_file.write(str(self.amount))
@@ -133,9 +132,13 @@ class Timer():
 
     def update(self, time):
         self.amount += time
-        settings_screen.title = f'Timer: {display_time(cleaning_timer.amount)}'
+        settings_screen.title = f'Timer: {display_time(self.amount)}'
         settings_screen.change_screen()
 
+    def set(self, time):
+        self.amount = time
+        settings_screen.title = f'Timer: {display_time(self.amount)}'
+        settings_screen.change_screen()
 
 # Define functions
 def blink(color, count):
@@ -251,6 +254,6 @@ while True:
     # Button D
     if magtag.peripherals.button_d_pressed:
         if Screen.current_screen == settings_screen.index:
-            cleaning_timer.amount = 0
+            cleaning_timer.set(3600)
         else:
             clean_screen.change_screen()
