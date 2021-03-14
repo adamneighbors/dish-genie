@@ -1,7 +1,6 @@
 # TODO: Fill out header
 # TODO: Update images to be cleaner.
 # TODO: Add documentation
-# TODO: Possibly change font
 # TODO: Display time left on cleaning page
 import time
 import displayio
