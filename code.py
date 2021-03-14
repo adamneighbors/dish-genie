@@ -246,7 +246,7 @@ while True:
         if Screen.current_screen == settings_screen.index:
             cleaning_timer.update(1800)
         else:
-            cleaning_screen.change_screen()
+            clean_screen.change_screen()
 
             # go to sleep
             alarm.exit_and_deep_sleep_until_alarms(*pin_alarms)
@@ -256,4 +256,4 @@ while True:
         if Screen.current_screen == settings_screen.index:
             cleaning_timer.set(3600)
         else:
-            clean_screen.change_screen()
+            cleaning_screen.change_screen()
