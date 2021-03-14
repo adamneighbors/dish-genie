@@ -13,7 +13,6 @@ from adafruit_magtag.magtag import MagTag
 import storage
 import board
 import alarm
-from supervisor import runtime
 
 # Try to mount root if USB is not connected.
 try:
