@@ -9,6 +9,10 @@ from adafruit_magtag.magtag import MagTag
 import storage
 import board
 import alarm
+import wifi
+import adafruit_requests
+import ssl
+import socketpool
 
 # Try to mount root if USB is not connected.
 try:
@@ -17,8 +21,8 @@ except:
     pass
 
 # set up pin alarms
-buttons = (board.BUTTON_A, board.BUTTON_B)
-pin_alarms = [alarm.pin.PinAlarm(pin=pin, value=False, pull=True) for pin in buttons]
+pin_alarm_a = alarm.pin.PinAlarm(pin=board.BUTTON_A, value=False, pull=True)
+pin_alarm_b = alarm.pin.PinAlarm(pin=board.BUTTON_B, value=False, pull=True)
 
 # toggle saved state
 alarm.sleep_memory[0] = not alarm.sleep_memory[0]
@@ -109,6 +113,7 @@ class Timer():
     def __init__(self):
         self.default_timer = 3600
         self.amount = self.read()
+        self.time_remaining = self.amount
 
     def read(self):
         try:
@@ -129,6 +134,7 @@ class Timer():
     def update(self, time):
         self.amount += time
         settings_screen.title = f'Timer: {display_time(self.amount)}'
+        self.time_remaining = self.amount
         settings_screen.change_screen()
 
     def set(self, time):
@@ -139,14 +145,14 @@ class Timer():
     def begin(self):
         time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() +
         self.amount)
+        current_time, finish_time = return_time(display_time(self.amount))
 
-        # Sleep for time set in settings
-        alarm.light_sleep_until_alarms(time_alarm)
-        clean_screen.change_screen()
-        magtag.peripherals.play_tone(880, 0.15)
+        cleaning_screen.set_buttons('Home',f'Started - {current_time} | Finish - {finish_time}','','')
+        cleaning_screen.change_screen()
 
-        # go to sleep until awaken by button
-        alarm.exit_and_deep_sleep_until_alarms(*pin_alarms)
+        # Sleep for time set in settings or awaken by button press
+        alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, pin_alarm_b, time_alarm)
+
 
 # Define functions
 def blink(color, count):
@@ -182,6 +188,52 @@ def display_time(seconds):
 
     return "%d:%02d" % (hour, minutes)
 
+def return_time(timer_time):
+    pool = socketpool.SocketPool(wifi.radio)
+    requests = adafruit_requests.Session(pool, ssl.create_default_context())
+    response = requests.get(TIME_URL)
+    raw_datetime = response.text[response.text.index(' '):]
+    raw_datetime = raw_datetime[:response.text.index(' ')]
+
+    hour, minute, seconds = raw_datetime.split(':')
+    hour = int(hour)
+    minute = int(minute)
+
+    if hour > 12:
+        am_pm = 'PM'
+        hour -= 12
+    else:
+        am_pm = 'AM'
+
+    finish_hour, finish_minute = timer_time.split(':')
+    finish_hour = int(finish_hour)
+    finish_minute = int(finish_minute)
+
+    finish_minute += minute
+
+    if finish_minute > 60:
+        finish_minute -= 60
+        finish_hour += 1
+
+    finish_hour += hour
+
+    if finish_hour > 12:
+        finish_am_pm = 'PM'
+        finish_hour -= 12
+    else:
+        finish_am_pm = 'AM'
+
+    if len(str(minute)) < 2:
+        minute = f'0{minute}'
+
+    if len(str(finish_minute)) < 2:
+        finish_minute = f'0{finish_minute}'
+
+    current_time = f'{hour}:{minute} {am_pm}'
+    finish_time = f'{finish_hour}:{finish_minute} {finish_am_pm}'
+
+    return current_time, finish_time
+
 # Main initialization
 magtag = MagTag()
 cleaning_timer = Timer()
@@ -200,6 +252,24 @@ Genie_image = './bmps/Dish_Genie.bmp'
 dirty_dishes_image = './bmps/DirtyDishes.bmp'
 clean_dishes_image = './bmps/CleanDishes.bmp'
 
+# Import secrets
+try:
+    from secrets import secrets
+except ImportError:
+    print("WiFi secrets are kept in secrets.py, please add them there!")
+    raise
+
+# Get our username, key, and desired timezone
+aio_username = secrets["aio_username"]
+aio_key = secrets["aio_key"]
+location = secrets.get("timezone", None)
+TIME_URL = "https://io.adafruit.com/api/v2/%s/integrations/time/strftime?x-aio-key=%s" % (aio_username, aio_key)
+TIME_URL += "&fmt=%25Y-%25m-%25d+%25H%3A%25M%3A%25S.%25L+%25j+%25u+%25z+%25Z"
+
+# Connect to internet
+wifi.radio.connect(secrets["ssid"], secrets["password"])
+
+
 # Create buttons
 button_a = Button('', 5, 0)
 button_b = Button('', 75, 1)
@@ -208,11 +278,11 @@ button_d = Button('', 225, 3)
 
 # Create screens
 main_screen = Screen('Dish Genie', Genie_image, 4, 100, 3)
-main_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
+main_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 main_screen.set_blink(BLUE, 1)
 
 dirty_screen = Screen('Dirty', dirty_dishes_image, 5, 125, 5)
-dirty_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
+dirty_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
 dirty_screen.set_blink(RED, 2)
 
 settings_screen = Screen(f'Timer: {display_time(cleaning_timer.amount)}', WHITE, 6, 10, 3)
@@ -220,14 +290,21 @@ settings_screen.set_buttons('Home', '+1 hr', '+30 Min', 'Reset')
 settings_screen.set_blink(MAGENTA, 1)
 
 cleaning_screen = Screen('Cleaning', clean_dishes_image, 7, 5, 4)
-cleaning_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
 cleaning_screen.set_blink(YELLOW, 3)
 
 clean_screen = Screen('Clean', clean_dishes_image, 8, 5, 5)
-clean_screen.set_buttons('Dirty', 'Settings', 'Clean', 'Cleaning')
+clean_screen.set_buttons('Home', '', '', '')
 clean_screen.set_blink(GREEN, 5)
 
-main_screen.change_screen()
+# Choose which screen to go to on startup.
+if str(alarm.wake_alarm) == '<TimeAlarm>':
+    clean_screen.change_screen()
+    magtag.peripherals.play_tone(880, 0.15)
+    time.sleep(0.1)
+    magtag.peripherals.play_tone(880, 0.15)
+    alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, pin_alarm_b)
+else:
+    main_screen.change_screen()
 
 # Main loop
 while True:
@@ -243,6 +320,8 @@ while True:
     if magtag.peripherals.button_b_pressed:
         if Screen.current_screen == settings_screen.index:
             cleaning_timer.update(3600)
+        elif Screen.current_screen == cleaning_screen.index:
+            pass
         else:
             settings_screen.change_screen()
 
@@ -250,16 +329,10 @@ while True:
     if magtag.peripherals.button_c_pressed:
         if Screen.current_screen == settings_screen.index:
             cleaning_timer.update(1800)
-        else:
-            clean_screen.change_screen()
-
-            # go to sleep until awaken by button
-            alarm.exit_and_deep_sleep_until_alarms(*pin_alarms)
 
     # Button D
     if magtag.peripherals.button_d_pressed:
         if Screen.current_screen == settings_screen.index:
             cleaning_timer.set(3600)
         else:
-            cleaning_screen.change_screen()
             cleaning_timer.begin()
