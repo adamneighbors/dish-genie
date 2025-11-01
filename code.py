@@ -1,7 +1,3 @@
-# TODO: Fill out header
-# TODO: Update images to be cleaner.
-# TODO: Add documentation
-# TODO: Display time left on cleaning page
 import time
 import displayio
 import terminalio
@@ -9,6 +5,8 @@ from adafruit_magtag.magtag import MagTag
 import storage
 import board
 import alarm
+from alarm.pin import PinAlarm
+from alarm.time import TimeAlarm
 import wifi
 import adafruit_requests
 import ssl
@@ -20,100 +18,52 @@ try:
 except:
     pass
 
-# set up pin alarms
-pin_alarm_a = alarm.pin.PinAlarm(pin=board.BUTTON_A, value=False, pull=True)
-pin_alarm_b = alarm.pin.PinAlarm(pin=board.BUTTON_B, value=False, pull=True)
+# Color codes
+RED = 0x880000
+GREEN = 0x00FF00
+BLUE = 0x000088
+YELLOW = 0x884400
+CYAN = 0x0088BB
+MAGENTA = 0x9900BB
+WHITE = 0xFFFFFF
 
-# toggle saved state
+# Set image paths
+Genie_image = 'bmps/Dish_Genie.bmp'
+dirty_dishes_image = 'bmps/DirtyDishes.bmp'
+clean_dishes_image = 'bmps/CleanDishes.bmp'
+bubbles_image = 'bmps/bubbles.bmp'
+
+# Import secrets
+try:
+    from  secrets import secrets
+except ImportError:
+    print('WiFi secrets are kept in secrets.py, please add them there!')
+    # Todo Log instead of print?
+    raise
+
+pin_alarm_a = PinAlarm(pin=board.BUTTON_A, value=False, pull=True)
+pin_alarm_b = PinAlarm(pin=board.BUTTON_B, value=False, pull=True)
 alarm.sleep_memory[0] = not alarm.sleep_memory[0]
-
-# Define classes
-class Button:
-    def __init__(self, label, pos, index):
-        self.label = label
-        self.pos = pos
-        self.index = index
-        self.set_label()
-
-    def set_label(self):
-        magtag.add_text(
-            text_font = terminalio.FONT,
-            text_position = (self.pos, 120),
-            text_scale = 1,
-            )
-        magtag.set_text(self.label, self.index, False)
-
-    def change_label(self, label):
-        magtag.set_text(label, self.index, False)
 
 
 class Screen:
-    current_screen = None
-    def __init__(self, title, image, index, title_pos, title_scale):
+    def __init__(self, name: str, title: str, image: str | int, title_position: int, title_scale: int, button_labels: tuple[str, str, str, str], blink: tuple[int, int, float]):
+        self.name = name
         self.title = title
-        self.index = index
-        self.title_pos = title_pos
-        self.title_scale = title_scale
         self.image = image
-        current_screen = index
-        self.button_a_label = ''
-        self.button_b_label = ''
-        self.button_c_label = ''
-        self.button_d_label = ''
-
-        self.set_title()
-
-    def set_buttons(self, button_a_label, button_b_label, button_c_label,
-    button_d_label):
-        self.button_a_label = button_a_label
-        self.button_b_label = button_b_label
-        self.button_c_label = button_c_label
-        self.button_d_label = button_d_label
-
-    def change_screen(self):
-        Screen.current_screen = self.index
-        self.change_image()
-        self.set_title()
-        self.change_buttons()
-        magtag.refresh()
-        blink(self.blink_color, self.blink_count)
-
-    def change_image(self):
-        magtag.graphics.set_background(self.image)
-
-
-    def change_buttons(self):
-        button_a.change_label(self.button_a_label)
-        button_b.change_label(self.button_b_label)
-        button_c.change_label(self.button_c_label)
-        button_d.change_label(self.button_d_label)
-
-    def set_title(self):
-        magtag.add_text(
-            text_font = terminalio.FONT,
-            text_position = (self.title_pos, (magtag.graphics.display.height // 2) - 1),
-            text_scale = self.title_scale,
-        )
-        magtag.set_text(self.title, self.index, False)
-
-        # Clears all other titles except for the one for the current screen.
-        try:
-            for i in range(50):
-                if i != self.index:
-                    magtag.set_text('', i, False)
-        except:
-            pass
-
-    def set_blink(self, color, count):
-        self.blink_color = color
-        self.blink_count = count
+        self.title_position = title_position
+        self.title_scale = title_scale
+        self.buttons = button_labels
+        self.blink_color = blink[0]
+        self.blink_count = blink[1]
+        self.blink_duration = blink[2]
 
 
 class Timer():
     def __init__(self):
         self.default_timer = 3600
-        self.amount = self.read()
-        self.time_remaining = self.amount
+        self.amount = int(self.read())
+        self.session = self._connect_network()
 
     def read(self):
         try:
@@ -131,208 +81,269 @@ class Timer():
         except:
             pass
 
-    def update(self, time):
+    def update(self, time: int):
         self.amount += time
-        settings_screen.title = f'Timer: {display_time(self.amount)}'
-        self.time_remaining = self.amount
-        settings_screen.change_screen()
 
-    def set(self, time):
+    def set(self, time: int):
         self.amount = time
-        settings_screen.title = f'Timer: {display_time(self.amount)}'
-        settings_screen.change_screen()
+
+    def _connect_network(self):
+        network = secrets['ssid']
+        network_pass = secrets['password']
+
+        wifi.radio.connect(network, network_pass)
+
+        pool = socketpool.SocketPool(wifi.radio)
+        return adafruit_requests.Session(pool, ssl.create_default_context())
+
+    def _return_current_time(self) -> str | None:
+        aio_username = secrets['aio_username']
+        aio_key = secrets['aio_key']
+        # time_url = 'https://io.adafruit.com/api/v2/%s/integrations/time/strftime?x-aio-key=%s&fmt=%25Y-%25m-%25d+%25H%3A%25M%3A%25S.%25L+%25j+%25u+%25z+%25Z' % (aio_username, aio_key)
+        time_url = f'https://io.adafruit.com/api/v2/{aio_username}/integrations/time/strftime?x-aio-key={aio_key}&fmt=%25Y-%25m-%25d+%25H%3A%25M%3A%25S.%25L+%25j+%25u+%25z+%25Z'
+
+        if not self.session:
+            self.session = self._connect_network()
+        response = self.session.get(time_url)
+        current_time = response.text.split(' ')[1]
+        return current_time
+
+    def _format_time(self, hour: int, minute: int, hour_format: str = '24'):
+        minute_str = str(minute)
+        if len(minute_str) < 2:
+            minute = int(f'0{minute_str}')
+
+        if minute > 60:
+            minute -= 60
+            hour += 1
+
+        if hour_format == '12':
+            am_pm = 'AM'
+            display_hour = hour
+            if hour == 0:
+                display_hour = 12
+            elif hour > 12:
+                display_hour = hour - 12
+            
+            return f'{display_hour}:{minute} {am_pm}'
+        return f'{hour:02d}:{minute:02d}'
+
+    def return_start_finish_time(self):
+        """Calculates start/finsih time and returns in readable format
+
+        Returns:
+            str: When the timer is started
+            str: When the timer will end
+        """
+        current_time = str(self._return_current_time())
+        start_hour = int(current_time.split(":")[0])
+        start_min = int(current_time.split(":")[1])
+        current_time_formatted = self._format_time(start_hour, start_min)
+
+        timer_time = self.convert_secs_to_hour_min()
+        timer_hour = int(timer_time.split(":")[0])
+        timer_min = int(timer_time.split(":")[1])
+        finish_hour = start_hour + timer_hour
+        finish_min = start_min + timer_min
+        finish_time_formatted = self._format_time(finish_hour, finish_min)
+
+        return current_time_formatted, finish_time_formatted
 
     def begin(self):
-        time_alarm = alarm.time.TimeAlarm(monotonic_time=time.monotonic() +
-        self.amount)
-        current_time, finish_time = return_time(display_time(self.amount))
-
-        cleaning_screen.set_buttons('Home',f'Started - {current_time} | Finish - {finish_time}','','')
-        cleaning_screen.change_screen()
+        time_alarm = TimeAlarm(monotonic_time=time.monotonic() + self.amount)
 
         # Sleep for time set in settings or awaken by button press
         alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, pin_alarm_b, time_alarm)
 
+    def convert_secs_to_hour_min(self):
+        seconds = float(self.amount) % (24 * 3600)
+        hour = seconds // 3600
+        seconds %= 3600
+        minutes = seconds // 60
 
-# Define functions
-def blink(color, count):
-    """
-    Blinks the LEDs for on the Magtag for the given color and number of times.
-
-    ;param color: Color that the LED will blink.
-    ;type color: str
-    ;param count: Number of times you want the LEDs to blink.
-    ;type count: int
-    """
-    for i in range(count):
-        magtag.peripherals.neopixel_disable = False
-        magtag.peripherals.neopixels.fill(color)
-        time.sleep(0.5)
-        magtag.peripherals.neopixel_disable = True
-        time.sleep(0.5)
-
-intervals = (
-    ('weeks', 604800),  # 60 * 60 * 24 * 7
-    ('days', 86400),    # 60 * 60 * 24
-    ('hours', 3600),    # 60 * 60
-    ('minutes', 60),
-    ('seconds', 1),
-    )
-
-def display_time(seconds):
-    seconds = float(seconds) % (24 * 3600)
-    hour = seconds // 3600
-    seconds %= 3600
-    minutes = seconds // 60
-    seconds %= 60
-
-    return "%d:%02d" % (hour, minutes)
-
-def return_time(timer_time):
-    pool = socketpool.SocketPool(wifi.radio)
-    requests = adafruit_requests.Session(pool, ssl.create_default_context())
-    response = requests.get(TIME_URL)
-    raw_datetime = response.text[response.text.index(' '):]
-    raw_datetime = raw_datetime[:response.text.index(' ')]
-
-    hour, minute, seconds = raw_datetime.split(':')
-    hour = int(hour)
-    minute = int(minute)
-
-    if hour > 12:
-        am_pm = 'PM'
-        hour -= 12
-    else:
-        am_pm = 'AM'
-
-    finish_hour, finish_minute = timer_time.split(':')
-    finish_hour = int(finish_hour)
-    finish_minute = int(finish_minute)
-
-    finish_minute += minute
-
-    if finish_minute > 60:
-        finish_minute -= 60
-        finish_hour += 1
-
-    finish_hour += hour
-
-    if finish_hour > 12:
-        finish_am_pm = 'PM'
-        finish_hour -= 12
-    else:
-        finish_am_pm = 'AM'
-
-    if len(str(minute)) < 2:
-        minute = f'0{minute}'
-
-    if len(str(finish_minute)) < 2:
-        finish_minute = f'0{finish_minute}'
-
-    current_time = f'{hour}:{minute} {am_pm}'
-    finish_time = f'{finish_hour}:{finish_minute} {finish_am_pm}'
-
-    return current_time, finish_time
-
-# Main initialization
-magtag = MagTag()
-cleaning_timer = Timer()
-
-# Color codes
-RED = 0x880000
-GREEN = 0x00FF00
-BLUE = 0x000088
-YELLOW = 0x884400
-CYAN = 0x0088BB
-MAGENTA = 0x9900BB
-WHITE = 0xFFFFFF
-
-# Set image paths
-Genie_image = './bmps/Dish_Genie.bmp'
-dirty_dishes_image = './bmps/DirtyDishes.bmp'
-clean_dishes_image = './bmps/CleanDishes.bmp'
-
-# Import secrets
-try:
-    from secrets import secrets
-except ImportError:
-    print("WiFi secrets are kept in secrets.py, please add them there!")
-    raise
-
-# Get our username, key, and desired timezone
-aio_username = secrets["aio_username"]
-aio_key = secrets["aio_key"]
-location = secrets.get("timezone", None)
-TIME_URL = "https://io.adafruit.com/api/v2/%s/integrations/time/strftime?x-aio-key=%s" % (aio_username, aio_key)
-TIME_URL += "&fmt=%25Y-%25m-%25d+%25H%3A%25M%3A%25S.%25L+%25j+%25u+%25z+%25Z"
-
-# Connect to internet
-wifi.radio.connect(secrets["ssid"], secrets["password"])
+        return '%d:%02d' % (hour, minutes)
 
 
-# Create buttons
-button_a = Button('', 5, 0)
-button_b = Button('', 75, 1)
-button_c = Button('', 155, 2)
-button_d = Button('', 225, 3)
+class DishGenie(MagTag):
+    def __init__(self):
+        super().__init__()
+        self.cleaning_timer = Timer()
+        self.screens = {}
+        self.current_screen = None
+        self.main_screen = None
+        self._create_screens()
+        self.main()
 
-# Create screens
-main_screen = Screen('Dish Genie', Genie_image, 4, 100, 3)
-main_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
-main_screen.set_blink(BLUE, 1)
+    def _create_screens(self):
+        self.screens['Home'] = Screen(
+            name='Home',
+            title='Dish Genie',
+            image=Genie_image,
+            title_position=100,
+            title_scale=3,
+            button_labels=('Dirty', 'Settings', '', 'Cleaning'),
+            blink=(BLUE, 1, 0.5)
+        )
+        self.screens['Dirty'] = Screen(
+            name='Dirty',
+            title='Dirty',
+            image=dirty_dishes_image,
+            title_position=125,
+            title_scale=5,
+            button_labels=('Dirty', 'Settings', '', 'Cleaning'),
+            blink=(RED, 2, 0.5)
+        )
+        self.screens['Settings'] = Screen(
+            name='Settings',
+            title=f'Timer: {self.cleaning_timer.convert_secs_to_hour_min()}',
+            image=WHITE,
+            title_position=10,
+            title_scale=3,
+            button_labels=('Home', '+1 hr', '+30 Min', 'Reset'),
+            blink=(MAGENTA, 1, 0.5)
+        )
+        self.screens['Cleaning'] = Screen(
+            name='Cleaning',
+            title=f'Cleaning...',
+            image=clean_dishes_image,
+            title_position=5,
+            title_scale=3,
+            button_labels=('Cancel', '', '', ''),
+            blink=(YELLOW, 3, 0.5)
+        )
+        self.screens['Cleaned'] = Screen(
+            name='Cleaned',
+            title=f'Clean!',
+            image=bubbles_image,
+            title_position=self.graphics.display.height // 2,
+            title_scale=5,
+            button_labels=('Home', '', '', ''),
+            blink=(GREEN, 5, 0.5)
+        )
 
-dirty_screen = Screen('Dirty', dirty_dishes_image, 5, 125, 5)
-dirty_screen.set_buttons('Dirty', 'Settings', '', 'Cleaning')
-dirty_screen.set_blink(RED, 2)
+    def _change_screen(self, screen: Screen):
+        # Clear screen
+        self.remove_all_text(auto_refresh=False)
+        # Set image
+        self.graphics.set_background(screen.image)
+        # Set Button Labels
+        
+        bottom_buttons = [5, 75, 155, 225]
+        for i, pos in enumerate(bottom_buttons):
+            button_index = self.add_text(
+                text_font = terminalio.FONT,
+                text_position = (pos, 120),
+                text_scale = 1,
+            )
+            self.set_text(screen.buttons[i], button_index, False)
 
-settings_screen = Screen(f'Timer: {display_time(cleaning_timer.amount)}', WHITE, 6, 10, 3)
-settings_screen.set_buttons('Home', '+1 hr', '+30 Min', 'Reset')
-settings_screen.set_blink(MAGENTA, 1)
+        # Set Title
+        title_index = self.add_text(
+            text_font = terminalio.FONT,
+            text_position = (screen.title_position, (self.graphics.display.height // 2) - 1),
+            text_scale = screen.title_scale,
+        )
+        self.set_text(screen.title, title_index, True)
+        # Blink LEDs
+        self.blink(screen.blink_color, screen.blink_count, screen.blink_duration)
+        self.current_screen = screen
 
-cleaning_screen = Screen('Cleaning', clean_dishes_image, 7, 5, 4)
-cleaning_screen.set_blink(YELLOW, 3)
 
-clean_screen = Screen('Clean', clean_dishes_image, 8, 5, 5)
-clean_screen.set_buttons('Home', '', '', '')
-clean_screen.set_blink(GREEN, 5)
+    def blink(self, color: int, count: int, duration: float = 0.5):
+        '''Blinks the LEDs for on the Magtag for the given color and number of times.
 
-# Choose which screen to go to on startup.
-if str(alarm.wake_alarm) == '<TimeAlarm>':
-    clean_screen.change_screen()
-    magtag.peripherals.play_tone(880, 0.15)
-    time.sleep(0.1)
-    magtag.peripherals.play_tone(880, 0.15)
-    alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, pin_alarm_b)
-else:
-    main_screen.change_screen()
+        Args:
+            color (int): Color that the LED will blink.
+            count (int): Number of times you want the LEDs to blink.
+            duration (float): How long to leave the light on each 'blink'.
+        '''
+        for i in range(count):
+            self.peripherals.neopixel_disable = False
+            self.peripherals.neopixels.fill(color)
+            time.sleep(duration)
+            self.peripherals.neopixel_disable = True
+            time.sleep(0.3)
 
-# Main loop
-while True:
-    # Button A
-    if magtag.peripherals.button_a_pressed:
-        if Screen.current_screen == settings_screen.index:
-            cleaning_timer.write()
-            main_screen.change_screen()
-        else:
-            dirty_screen.change_screen()
+    def _start_cleaning(self):
+        if not self.main_screen:
+            return
 
-    # Button B
-    if magtag.peripherals.button_b_pressed:
-        if Screen.current_screen == settings_screen.index:
-            cleaning_timer.update(3600)
-        elif Screen.current_screen == cleaning_screen.index:
-            pass
-        else:
-            settings_screen.change_screen()
+        current_time, finish_time = self.cleaning_timer.return_start_finish_time()
+        self.screens.get('Cleaning', self.main_screen).buttons = ('Cancel',f'Started - {current_time} | Finish - {finish_time}','','')
+        self._change_screen(self.screens.get('Cleaning', self.main_screen))
+        self.cleaning_timer.begin()
 
-    # Button C
-    if magtag.peripherals.button_c_pressed:
-        if Screen.current_screen == settings_screen.index:
-            cleaning_timer.update(1800)
+    def main(self):
+        self.main_screen = self.screens.get('Home', None)
+        if not self.main_screen:
+            return
 
-    # Button D
-    if magtag.peripherals.button_d_pressed:
-        if Screen.current_screen == settings_screen.index:
-            cleaning_timer.set(3600)
-        else:
-            cleaning_timer.begin()
+        if str(alarm.wake_alarm) == '<TimeAlarm>':
+            self._change_screen(self.screens.get('Cleaning', self.main_screen))
+            self.peripherals.play_tone(880, 0.15)
+            time.sleep(0.1)
+            self.peripherals.play_tone(880, 0.15)
+            alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, pin_alarm_b)
+
+        self._change_screen(self.main_screen)
+        if not self.current_screen:
+            self.current_screen = self.main_screen
+
+        while True:
+            if self.current_screen.name == 'Home':
+                if self.peripherals.button_a_pressed:
+                    self._change_screen(self.screens.get('Dirty', self.main_screen))
+                elif self.peripherals.button_b_pressed:
+                    self._change_screen(self.screens.get('Settings', self.main_screen))
+                elif self.peripherals.button_c_pressed:
+                    pass
+                elif self.peripherals.button_d_pressed:
+                    self._start_cleaning()
+
+            elif self.current_screen.name == 'Dirty':
+                if self.peripherals.button_a_pressed:
+                    self._change_screen(self.screens.get('Home', self.main_screen))
+                elif self.peripherals.button_b_pressed:
+                    self._change_screen(self.screens.get('Settings', self.main_screen))
+                elif self.peripherals.button_c_pressed:
+                    pass
+                elif self.peripherals.button_d_pressed:
+                    self._start_cleaning()
+            elif self.current_screen.name == 'Settings':
+                if self.peripherals.button_a_pressed:
+                    self.cleaning_timer.write()
+                    self._change_screen(self.screens.get('Home', self.main_screen))
+                elif self.peripherals.button_b_pressed:
+                    self.cleaning_timer.update(3600)
+                    self.current_screen.title=f'Timer: {self.cleaning_timer.convert_secs_to_hour_min()}'
+                    self._change_screen(self.screens.get('Settings', self.main_screen))
+                elif self.peripherals.button_c_pressed:
+                    self.cleaning_timer.update(1800)
+                    self.current_screen.title=f'Timer: {self.cleaning_timer.convert_secs_to_hour_min()}'
+                    self._change_screen(self.screens.get('Settings', self.main_screen))
+                elif self.peripherals.button_d_pressed:
+                    self.cleaning_timer.set(3600)
+                    self.current_screen.title=f'Timer: {self.cleaning_timer.convert_secs_to_hour_min()}'
+                    self._change_screen(self.screens.get('Settings', self.main_screen))
+            elif self.current_screen.name == 'Cleaning':
+                if self.peripherals.button_a_pressed:
+                    self._change_screen(self.screens.get('Home', self.main_screen))
+                elif self.peripherals.button_b_pressed:
+                    pass
+                elif self.peripherals.button_c_pressed:
+                    pass
+                elif self.peripherals.button_d_pressed:
+                    pass
+            elif self.current_screen.name == 'Cleaned':
+                if self.peripherals.button_a_pressed:
+                    self._change_screen(self.screens.get('Home', self.main_screen))
+                elif self.peripherals.button_b_pressed:
+                    pass
+                elif self.peripherals.button_c_pressed:
+                    pass
+                elif self.peripherals.button_d_pressed:
+                    pass
+
+
+if __name__ == '__main__':
+    DishGenie()
