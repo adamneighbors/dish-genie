@@ -1,20 +1,24 @@
+import ssl
 import time
-import displayio
-import terminalio
-from adafruit_magtag.magtag import MagTag
-import storage
-import board
+
+import adafruit_requests
 import alarm
+import board
+import displayio
+import socketpool
+import storage
+import terminalio
+import wifi
+from adafruit_magtag.magtag import MagTag
 from alarm.pin import PinAlarm
 from alarm.time import TimeAlarm
-import wifi
-import adafruit_requests
-import ssl
-import socketpool
 
-# Try to mount root if USB is not connected.
 try:
-    storage.remount('/', False)
+    storage.remount(
+        mount_path='/',
+        readonly=False,
+        disable_concurrent_write_protection=True
+    )
 except:
     pass
 
@@ -35,7 +39,7 @@ bubbles_image = 'bmps/bubbles.bmp'
 
 # Import secrets
 try:
-    from  secrets import secrets
+    from secrets import secrets
 except ImportError:
     print('WiFi secrets are kept in secrets.py, please add them there!')
     # Todo Log instead of print?
@@ -63,7 +67,7 @@ class Timer():
     def __init__(self):
         self.default_timer = 3600
         self.amount = int(self.read())
-        self.session = self._connect_network()
+        self.session = None
 
     def read(self):
         try:
