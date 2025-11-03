@@ -1,4 +1,4 @@
-# 🧼 Dish Genie  
+# 🧼 Dish Genie
 *A smart dishwasher timer for the Adafruit MagTag (CircuitPython 10.x+)*
 
 Dish Genie is a simple but fun MagTag project that lets you set a timer for your dishwasher cycle and get notified when it’s done — complete with custom e-Ink graphics, NeoPixel LED feedback, and button-driven control.
@@ -6,12 +6,12 @@ Dish Genie is a simple but fun MagTag project that lets you set a timer for your
 ---
 
 ## ✨ Features
-- 🕒 **Adjustable timer** — Add 1-hour or 30-minute increments, or reset to default (1 hour).  
-- 🧽 **Visual dishwasher states** — “Dirty”, “Cleaning…”, and “Clean!” screens with custom BMP images.  
-- 💡 **LED notifications** — MagTag’s built-in NeoPixels blink in different colors for each state.  
-- 🔔 **Completion alert** — Audible tone plays when the cleaning timer finishes.  
-- 🌐 **Real-time tracking** — Fetches the current time from Adafruit IO’s time integration.  
-- 🔋 **Low power sleep** — Uses `alarm` deep-sleep to conserve power between cycles.  
+- 🕒 **Adjustable timer** — Increase timer by 30-minute increments, or reset to default (1 hour). In either 12 or 24 hour format!
+- 🧽 **Visual dishwasher states** — “Dirty”, “Cleaning…”, and “Clean!” screens with custom BMP images.
+- 💡 **LED notifications** — MagTag’s built-in NeoPixels blink in different colors for each state.
+- 🔔 **Completion alert** — Audible jingle plays when the cleaning timer finishes.
+- 🌐 **Real-time tracking** — Fetches the current time from Adafruit IO’s time integration.
+- 🔋 **Low power sleep** — Uses `alarm` deep-sleep to conserve power between cycles.
 
 ---
 ## 💾 How It Works
@@ -22,12 +22,14 @@ Dish Genie is a simple but fun MagTag project that lets you set a timer for your
 4. The MagTag goes into deep sleep until the timer expires (or a button is pressed).
 5. When the timer ends, LEDs flash yellow, a tone plays, and the Clean! screen appears.
 
+> *Rename `secrets.EXAMPLE.py` to `secrets.py` and fill in with your Network/AIO settings to fetch time.*
+
 ---
 
 ## 🧩 Hardware Requirements
-- [Adafruit MagTag](https://www.adafruit.com/product/4800)  
-- USB-C cable for programming/power  
-- Optional: 3D-printed stand or magnetic mount for your dishwasher door  
+- [Adafruit MagTag](https://www.adafruit.com/product/4800)
+- USB-C cable for programming/power
+- Optional: 3D-printed stand or magnetic mount for your dishwasher door
 
 ---
 
@@ -54,7 +56,13 @@ You can install these from the [Adafruit CircuitPython Bundle](https://circuitpy
 
 ---
 
-## License
+## 🔧 Issues/Notices
+> - Untested with 2025 version of the MagTag, but should all work the same.
+> - PRs welcome!
+
+---
+
+## 📃 License
 Copyright © 2025 Adam Neighbors
 
 Released under the GNU General Public License v3.0 (GPLv3).

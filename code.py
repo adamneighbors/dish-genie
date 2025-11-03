@@ -46,7 +46,6 @@ except ImportError:
     raise
 
 pin_alarm_a = PinAlarm(pin=board.BUTTON_A, value=False, pull=True)
-pin_alarm_b = PinAlarm(pin=board.BUTTON_B, value=False, pull=True)
 alarm.sleep_memory[0] = not alarm.sleep_memory[0]
 
 
@@ -63,13 +62,14 @@ class Screen:
         self.blink_duration = blink[2]
 
 
-class Timer():
+class Timer:
     def __init__(self):
         self.default_timer = 3600
-        self.amount = int(self.read())
+        self.amount = int(self.read_time())
         self.session = None
+        self.format = self.read_format()
 
-    def read(self):
+    def read_time(self):
         try:
             with open('timer.txt', 'r') as timer_file:
                 file_time = timer_file.read()
@@ -78,10 +78,27 @@ class Timer():
         except:
             return self.default_timer
 
-    def write(self):
+    def write_time(self):
         try:
             with open('timer.txt', 'w') as timer_file:
                 timer_file.write(str(self.amount))
+        except:
+            pass
+
+    def read_format(self):
+        try:
+            file_format = '24'
+            with open('format.txt', 'r') as format_file:
+                file_format = format_file.read()
+                self.format = file_format
+            return file_format
+        except:
+            return self.default_timer
+
+    def write_format(self):
+        try:
+            with open('format.txt', 'w') as format_file:
+                format_file.write(str(self.format))
         except:
             pass
 
@@ -112,8 +129,9 @@ class Timer():
         current_time = response.text.split(' ')[1]
         return current_time
 
-    def _format_time(self, hour: int, minute: int, hour_format: str = '24'):
+    def _format_time(self, hour: int, minute: int):
         minute_str = str(minute)
+        hour_format = self.get_current_format()
         if len(minute_str) < 2:
             minute = int(f'0{minute_str}')
 
@@ -123,12 +141,14 @@ class Timer():
 
         if hour_format == '12':
             am_pm = 'AM'
+
             display_hour = hour
             if hour == 0:
                 display_hour = 12
             elif hour > 12:
+                am_pm = 'PM'
                 display_hour = hour - 12
-            
+
             return f'{display_hour}:{minute} {am_pm}'
         return f'{hour:02d}:{minute:02d}'
 
@@ -143,6 +163,7 @@ class Timer():
         start_hour = int(current_time.split(":")[0])
         start_min = int(current_time.split(":")[1])
         current_time_formatted = self._format_time(start_hour, start_min)
+        print(current_time_formatted)
 
         timer_time = self.convert_secs_to_hour_min()
         timer_hour = int(timer_time.split(":")[0])
@@ -157,7 +178,7 @@ class Timer():
         time_alarm = TimeAlarm(monotonic_time=time.monotonic() + self.amount)
 
         # Sleep for time set in settings or awaken by button press
-        alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, pin_alarm_b, time_alarm)
+        alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, time_alarm)
 
     def convert_secs_to_hour_min(self):
         seconds = float(self.amount) % (24 * 3600)
@@ -166,6 +187,12 @@ class Timer():
         minutes = seconds // 60
 
         return '%d:%02d' % (hour, minutes)
+
+    def get_current_format(self):
+        return self.format
+
+    def set_format(self, format: str):
+        self.format = format
 
 
 class DishGenie(MagTag):
@@ -197,13 +224,22 @@ class DishGenie(MagTag):
             button_labels=('Dirty', 'Settings', '', 'Cleaning'),
             blink=(RED, 2, 0.5)
         )
-        self.screens['Settings'] = Screen(
-            name='Settings',
+        self.screens['Settings-time'] = Screen(
+            name='Settings-time',
             title=f'Timer: {self.cleaning_timer.convert_secs_to_hour_min()}',
             image=WHITE,
             title_position=10,
             title_scale=3,
-            button_labels=('Home', '+1 hr', '+30 Min', 'Reset'),
+            button_labels=('Home', '+30 Min', 'Reset', 'Format'),
+            blink=(MAGENTA, 1, 0.5)
+        )
+        self.screens['Settings-format'] = Screen(
+            name='Settings-format',
+            title=f'Format: {self.cleaning_timer.get_current_format()}hr',
+            image=WHITE,
+            title_position=10,
+            title_scale=3,
+            button_labels=('Home', '24 Hour', '12 Hour', 'Timer'),
             blink=(MAGENTA, 1, 0.5)
         )
         self.screens['Cleaning'] = Screen(
@@ -283,11 +319,23 @@ class DishGenie(MagTag):
             return
 
         if str(alarm.wake_alarm) == '<TimeAlarm>':
-            self._change_screen(self.screens.get('Cleaning', self.main_screen))
-            self.peripherals.play_tone(880, 0.15)
-            time.sleep(0.1)
-            self.peripherals.play_tone(880, 0.15)
-            alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, pin_alarm_b)
+            self._change_screen(self.screens.get('Cleaned', self.main_screen))
+            jingle = [
+                (659, 0.2),
+                (784, 0.2),
+                (880, 0.2),
+                (988, 0.3),
+                (880, 0.3),
+                (784, 0.3),
+                (988, 0.4),
+                (1319, 0.6),
+            ]
+            # Play the jingle
+            for freq, duration in jingle:
+                self.peripherals.play_tone(freq, duration)
+                time.sleep(0.05)  # tiny gap between notes
+
+            alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a)
 
         self._change_screen(self.main_screen)
         if not self.current_screen:
@@ -298,7 +346,7 @@ class DishGenie(MagTag):
                 if self.peripherals.button_a_pressed:
                     self._change_screen(self.screens.get('Dirty', self.main_screen))
                 elif self.peripherals.button_b_pressed:
-                    self._change_screen(self.screens.get('Settings', self.main_screen))
+                    self._change_screen(self.screens.get('Settings-time', self.main_screen))
                 elif self.peripherals.button_c_pressed:
                     pass
                 elif self.peripherals.button_d_pressed:
@@ -308,27 +356,44 @@ class DishGenie(MagTag):
                 if self.peripherals.button_a_pressed:
                     self._change_screen(self.screens.get('Home', self.main_screen))
                 elif self.peripherals.button_b_pressed:
-                    self._change_screen(self.screens.get('Settings', self.main_screen))
+                    self._change_screen(self.screens.get('Settings-time', self.main_screen))
                 elif self.peripherals.button_c_pressed:
                     pass
                 elif self.peripherals.button_d_pressed:
                     self._start_cleaning()
-            elif self.current_screen.name == 'Settings':
+
+            elif self.current_screen.name == 'Settings-time':
                 if self.peripherals.button_a_pressed:
-                    self.cleaning_timer.write()
+                    self.cleaning_timer.write_time()
                     self._change_screen(self.screens.get('Home', self.main_screen))
                 elif self.peripherals.button_b_pressed:
-                    self.cleaning_timer.update(3600)
-                    self.current_screen.title=f'Timer: {self.cleaning_timer.convert_secs_to_hour_min()}'
-                    self._change_screen(self.screens.get('Settings', self.main_screen))
-                elif self.peripherals.button_c_pressed:
                     self.cleaning_timer.update(1800)
                     self.current_screen.title=f'Timer: {self.cleaning_timer.convert_secs_to_hour_min()}'
-                    self._change_screen(self.screens.get('Settings', self.main_screen))
-                elif self.peripherals.button_d_pressed:
+                    self._change_screen(self.screens.get('Settings-time', self.main_screen))
+                elif self.peripherals.button_c_pressed:
                     self.cleaning_timer.set(3600)
                     self.current_screen.title=f'Timer: {self.cleaning_timer.convert_secs_to_hour_min()}'
-                    self._change_screen(self.screens.get('Settings', self.main_screen))
+                    self._change_screen(self.screens.get('Settings-time', self.main_screen))
+                elif self.peripherals.button_d_pressed:
+                    self.cleaning_timer.write_time()
+                    self._change_screen(self.screens.get('Settings-format', self.main_screen))
+
+            elif self.current_screen.name == 'Settings-format':
+                if self.peripherals.button_a_pressed:
+                    self.cleaning_timer.write_format()
+                    self._change_screen(self.screens.get('Home', self.main_screen))
+                elif self.peripherals.button_b_pressed:
+                    self.cleaning_timer.set_format('24')
+                    self.screens.get('Settings-format', self.main_screen).title = f'Format: {self.cleaning_timer.get_current_format()}hr'
+                    self._change_screen(self.screens.get('Settings-format', self.main_screen))
+                elif self.peripherals.button_c_pressed:
+                    self.cleaning_timer.set_format('12')
+                    self.screens.get('Settings-format', self.main_screen).title = f'Format: {self.cleaning_timer.get_current_format()}hr'
+                    self._change_screen(self.screens.get('Settings-format', self.main_screen))
+                elif self.peripherals.button_d_pressed:
+                    self.cleaning_timer.write_format()
+                    self._change_screen(self.screens.get('Settings-time', self.main_screen))
+
             elif self.current_screen.name == 'Cleaning':
                 if self.peripherals.button_a_pressed:
                     self._change_screen(self.screens.get('Home', self.main_screen))
@@ -338,6 +403,7 @@ class DishGenie(MagTag):
                     pass
                 elif self.peripherals.button_d_pressed:
                     pass
+
             elif self.current_screen.name == 'Cleaned':
                 if self.peripherals.button_a_pressed:
                     self._change_screen(self.screens.get('Home', self.main_screen))
