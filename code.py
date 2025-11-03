@@ -141,12 +141,14 @@ class Timer:
 
         if hour_format == '12':
             am_pm = 'AM'
+
             display_hour = hour
             if hour == 0:
                 display_hour = 12
             elif hour > 12:
+                am_pm = 'PM'
                 display_hour = hour - 12
-            
+
             return f'{display_hour}:{minute} {am_pm}'
         return f'{hour:02d}:{minute:02d}'
 
@@ -161,6 +163,7 @@ class Timer:
         start_hour = int(current_time.split(":")[0])
         start_min = int(current_time.split(":")[1])
         current_time_formatted = self._format_time(start_hour, start_min)
+        print(current_time_formatted)
 
         timer_time = self.convert_secs_to_hour_min()
         timer_hour = int(timer_time.split(":")[0])
