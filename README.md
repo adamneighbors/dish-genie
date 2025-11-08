@@ -1,5 +1,4 @@
-# 🧼 Dish Genie
-*A smart dishwasher timer for the Adafruit MagTag (CircuitPython 10.x+)*
+![Dish Genie Banner](dish_genie_banner.png)
 
 Dish Genie is a simple but fun MagTag project that lets you set a timer for your dishwasher cycle and get notified when it’s done — complete with custom e-Ink graphics, NeoPixel LED feedback, and button-driven control.
 
