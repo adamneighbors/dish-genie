@@ -13,7 +13,8 @@ Dish Genie is a simple but fun MagTag project that lets you set a timer for your
 - 🔋 **Low power sleep** — Uses `alarm` deep-sleep to conserve power between cycles.
 
 ---
-## 💾 How It Works
+
+## 🧩 How It Works
 
 1. On boot, the MagTag displays the Home screen (Dish Genie logo).
 2. Press the **Cleaning** button to start the dishwasher timer.
@@ -25,14 +26,14 @@ Dish Genie is a simple but fun MagTag project that lets you set a timer for your
 
 ---
 
-## 🧩 Hardware Requirements
+## 🧰 Hardware Requirements
 - [Adafruit MagTag](https://www.adafruit.com/product/4800)
 - USB-C cable for programming/power
 - Optional: 3D-printed stand or magnetic mount for your dishwasher door
 
 ---
 
-## 🧰 Software Requirements
+## 💾 Software Requirements
 - **CircuitPython 10.0+**
 - **Libraries:**
   - `adafruit_magtag`
