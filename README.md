@@ -50,6 +50,17 @@ You can install these from the [Adafruit CircuitPython Bundle](https://circuitpy
 
 ---
 
+## 🧪 Automated tests (host)
+
+Pure-Python helpers live in `dish_genie_logic.py` and are covered with **pytest** on your computer (GitHub Actions runs the same suite on pushes and PRs). The MagTag firmware stays in `dish_genie_device.py`; **`code.py` is only the CircuitPython entrypoint** (it lazily imports the device module so local `pytest` does not collide with the standard library `code` package).
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+---
+
 ## 💤 Power & Sleep
 - Uses alarm.exit_and_deep_sleep_until_alarms() to conserve battery life.
 - Can be woken early by pressing Button A or B.

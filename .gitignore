@@ -2,3 +2,6 @@
 secrets.py
 .vscode
 timer.txt
+__pycache__/
+.pytest_cache/
+*.pyc
