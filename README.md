@@ -48,6 +48,8 @@ Dish Genie is a simple but fun MagTag project that lets you set a timer for your
 
 You can install these from the [Adafruit CircuitPython Bundle](https://circuitpython.org/libraries).
 
+Copy `code.py`, `dish_genie_device.py`, and `dish_genie_logic.py` to the MagTag USB drive (`CIRCUITPY/`, same folder as `secrets.py`). `code.py` is the boot file CircuitPython runs first.
+
 ---
 
 ## 🧪 Automated tests (host)
