@@ -6,6 +6,7 @@ Dish Genie is a simple but fun MagTag project that lets you set a timer for your
 
 ## ✨ Features
 - 🕒 **Adjustable timer** — Increase timer by 30-minute increments, or reset to default (1 hour). In either 12 or 24 hour format!
+- 😴 **Sleeping screen** — Before deep sleep (while the timer runs or after the clean jingle), the display shows “Sleeping” so the idle state is obvious; press **A** (labeled “Wake”) to return home after a cycle completes.
 - 🧽 **Visual dishwasher states** — “Dirty”, “Cleaning…”, and “Clean!” screens with custom BMP images.
 - 💡 **LED notifications** — MagTag’s built-in NeoPixels blink in different colors for each state.
 - 🔔 **Completion alert** — Audible jingle plays when the cleaning timer finishes.

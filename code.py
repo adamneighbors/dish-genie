@@ -174,8 +174,12 @@ class Timer:
 
         return current_time_formatted, finish_time_formatted
 
-    def begin(self):
+    def begin(self, before_deep_sleep=None):
         time_alarm = TimeAlarm(monotonic_time=time.monotonic() + self.amount)
+
+        # Optional hook to refresh the e-ink (e.g. "Sleeping") before deep sleep
+        if before_deep_sleep is not None:
+            before_deep_sleep()
 
         # Sleep for time set in settings or awaken by button press
         alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a, time_alarm)
@@ -251,6 +255,15 @@ class DishGenie(MagTag):
             button_labels=('Cancel', '', '', ''),
             blink=(YELLOW, 3, 0.5)
         )
+        self.screens['Sleeping'] = Screen(
+            name='Sleeping',
+            title='Sleeping',
+            image=Genie_image,
+            title_position=100,
+            title_scale=3,
+            button_labels=('Wake', '', '', ''),
+            blink=(BLUE, 1, 0.4)
+        )
         self.screens['Cleaned'] = Screen(
             name='Cleaned',
             title=f'Clean!',
@@ -311,14 +324,20 @@ class DishGenie(MagTag):
         current_time, finish_time = self.cleaning_timer.return_start_finish_time()
         self.screens.get('Cleaning', self.main_screen).buttons = ('Cancel',f'Started - {current_time} | Finish - {finish_time}','','')
         self._change_screen(self.screens.get('Cleaning', self.main_screen))
-        self.cleaning_timer.begin()
+        self.cleaning_timer.begin(
+            before_deep_sleep=lambda: self._change_screen(self.screens.get('Sleeping', self.main_screen))
+        )
 
     def main(self):
         self.main_screen = self.screens.get('Home', None)
         if not self.main_screen:
             return
 
-        if str(alarm.wake_alarm) == '<TimeAlarm>':
+        # Woke from idle deep sleep after clean (shows "Sleeping" then sleeps until A)
+        if alarm.sleep_memory[1]:
+            alarm.sleep_memory[1] = 0
+            self._change_screen(self.screens.get('Home', self.main_screen))
+        elif str(alarm.wake_alarm) == '<TimeAlarm>':
             self._change_screen(self.screens.get('Cleaned', self.main_screen))
             jingle = [
                 (659, 0.2),
@@ -335,6 +354,8 @@ class DishGenie(MagTag):
                 self.peripherals.play_tone(freq, duration)
                 time.sleep(0.05)  # tiny gap between notes
 
+            alarm.sleep_memory[1] = 1
+            self._change_screen(self.screens.get('Sleeping', self.main_screen))
             alarm.exit_and_deep_sleep_until_alarms(pin_alarm_a)
 
         self._change_screen(self.main_screen)
